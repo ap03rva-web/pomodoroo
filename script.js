@@ -5,6 +5,10 @@ const MET_SEARCH_URL =
   "?hasImages=true&medium=Paintings&departmentId=11&isHighlight=true&limit=500&q=*";
 const MET_OBJECT_URL = "https://collectionapi.metmuseum.org/public/collection/v1/objects/";
 
+const REQUEST_TIMEOUT_MS = 10 * 1000;
+const MAX_TRIES = 5;
+const RETRY_PAUSE_MS = 1000;
+
 const timeEl = document.getElementById("time");
 const primaryBtn = document.getElementById("primary");
 const resetBtn = document.getElementById("reset");
@@ -15,6 +19,8 @@ const stageEl = document.getElementById("stage");
 const frameEl = document.getElementById("frame");
 const photoEl = document.getElementById("photo");
 const loadingEl = document.getElementById("loading");
+const noticeEl = document.getElementById("notice");
+const retryBtn = document.getElementById("retry");
 
 const MET_LINK_START = "https://www.metmuseum.org/";
 
@@ -24,6 +30,7 @@ let detailsEl = null;
 let currentDetails = null;
 let paintingIds = null;
 let lastPaintingId = null;
+let loadCount = 0;
 let remainingMs = TOTAL_MS;
 let endTime = 0;
 let intervalId = null;
@@ -45,67 +52,112 @@ function setBlur(amount, instant) {
   }
 }
 
+// Fetch JSON from the museum, giving up after 10 seconds or on any reply that isn't a clean success.
+async function fetchJson(url) {
+  const controller = new AbortController();
+  const timer = setTimeout(function () {
+    controller.abort();
+  }, REQUEST_TIMEOUT_MS);
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    if (!response.ok) throw new Error("bad reply");
+    return await response.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // Ask the museum once for a list of paintings that have photos, and keep the list.
 async function getPaintingIds() {
   if (!paintingIds) {
-    const response = await fetch(MET_SEARCH_URL);
-    paintingIds = (await response.json()).objectIDs;
+    const ids = (await fetchJson(MET_SEARCH_URL)).objectIDs;
+    if (!Array.isArray(ids) || ids.length === 0) throw new Error("search found nothing");
+    paintingIds = ids;
   }
   return paintingIds;
 }
 
-// Pick random paintings until one has a small photo, and return the museum's record for it.
-async function findPainting() {
-  const ids = await getPaintingIds();
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const id = ids[Math.floor(Math.random() * ids.length)];
-    if (id === lastPaintingId) continue;
-    const response = await fetch(MET_OBJECT_URL + id);
-    const painting = await response.json();
-    if (painting.primaryImageSmall) {
-      lastPaintingId = id;
-      return painting;
-    }
-  }
-  return null;
-}
-
+// Load the picture, giving up after 10 seconds or if the file is broken.
 function preload(url) {
   return new Promise(function (resolve, reject) {
     const image = new Image();
+    const timer = setTimeout(function () {
+      image.src = "";
+      reject(new Error("picture too slow"));
+    }, REQUEST_TIMEOUT_MS);
     image.onload = function () {
+      clearTimeout(timer);
       resolve(image);
     };
-    image.onerror = reject;
+    image.onerror = function () {
+      clearTimeout(timer);
+      reject(new Error("picture failed"));
+    };
     image.src = url;
   });
 }
 
-// If anything goes wrong, the placeholder simply stays on screen.
+function sleep(ms) {
+  return new Promise(function (resolve) {
+    setTimeout(resolve, ms);
+  });
+}
+
+// One try: pick a painting we haven't tried yet and check it is a painting with a photo that loads.
+async function tryOnePainting(triedIds) {
+  const ids = await getPaintingIds();
+  let candidates = ids.filter(function (id) {
+    return id !== lastPaintingId && !triedIds.has(id);
+  });
+  if (candidates.length === 0) candidates = ids;
+  const id = candidates[Math.floor(Math.random() * candidates.length)];
+  triedIds.add(id);
+
+  const painting = await fetchJson(MET_OBJECT_URL + id);
+  if (!/painting/i.test(painting.classification || "") || !painting.primaryImageSmall) {
+    throw new Error("not a painting with a photo");
+  }
+  const image = await preload(painting.primaryImageSmall);
+  return { id: id, painting: painting, image: image };
+}
+
+// Try up to 5 paintings, pausing between tries. If all fail, the placeholder stays
+// and a friendly message appears.
 async function loadPainting() {
+  const thisLoad = ++loadCount; // a newer load (Restart session, Try again) cancels this one
+  const triedIds = new Set();
   stageEl.classList.remove("loaded");
   currentDetails = null;
+  noticeEl.hidden = true;
   loadingEl.hidden = false;
-  try {
-    const painting = await findPainting();
-    if (painting) {
-      const image = await preload(painting.primaryImageSmall);
-      frameEl.style.setProperty("--ratio", image.naturalWidth / image.naturalHeight);
-      photoEl.src = painting.primaryImageSmall;
+
+  for (let attempt = 1; attempt <= MAX_TRIES; attempt++) {
+    try {
+      const found = await tryOnePainting(triedIds);
+      if (thisLoad !== loadCount) return;
+      lastPaintingId = found.id;
+      frameEl.style.setProperty("--ratio", found.image.naturalWidth / found.image.naturalHeight);
+      photoEl.src = found.painting.primaryImageSmall;
       stageEl.classList.add("loaded");
       // Saved only now, so the details always belong to the image on screen.
       currentDetails = {
-        title: painting.title,
-        artist: painting.artistDisplayName,
-        year: painting.objectDate,
-        link: painting.objectURL,
+        title: found.painting.title,
+        artist: found.painting.artistDisplayName,
+        year: found.painting.objectDate,
+        link: found.painting.objectURL,
       };
+      loadingEl.hidden = true;
+      if (state === "finished") showDetails(); // the painting arrived after 00:00
+      return;
+    } catch (error) {
+      if (thisLoad !== loadCount) return;
+      if (attempt < MAX_TRIES) await sleep(RETRY_PAUSE_MS);
+      if (thisLoad !== loadCount) return;
     }
-  } catch (error) {
-    // keep the placeholder
-  } finally {
-    loadingEl.hidden = true;
   }
+
+  loadingEl.hidden = true;
+  noticeEl.hidden = false;
 }
 
 function showDetails() {
@@ -198,6 +250,8 @@ primaryBtn.addEventListener("click", function () {
 });
 
 resetBtn.addEventListener("click", reset);
+
+retryBtn.addEventListener("click", loadPainting);
 
 // Catch up straight away when the tab comes back into view.
 document.addEventListener("visibilitychange", function () {

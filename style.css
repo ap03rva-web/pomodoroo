@@ -111,6 +111,23 @@ body {
   to { background-position: -100% 0; }
 }
 
+/* the friendly message when no painting could be loaded, in the middle of the artwork area */
+.notice {
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(86%, 360px);
+  text-align: center;
+}
+
+.notice[hidden] { display: none; }
+
+.notice p {
+  margin: 0 0 14px;
+  font-size: 17px;
+}
+
 /* everything that sits on top of the painting */
 .dock {
   position: relative;
