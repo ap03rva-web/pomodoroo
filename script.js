@@ -14,11 +14,12 @@ const timerBoxEl = document.querySelector(".timer");
 const photoEl = document.getElementById("photo");
 const loadingEl = document.getElementById("loading");
 
-// Made-up painting details for now. They only exist on the page once the timer finishes.
-const PAINTING = { title: "Harbour at Dawn", artist: "Marguerite Lenoir", year: "1887" };
+const MET_LINK_START = "https://www.metmuseum.org/";
 
 let state = "ready"; // ready, running, paused, finished
 let detailsEl = null;
+// The real details of the painting on screen. Kept here, not on the page, until the timer finishes.
+let currentDetails = null;
 let paintingIds = null;
 let lastPaintingId = null;
 let remainingMs = TOTAL_MS;
@@ -41,8 +42,8 @@ async function getPaintingIds() {
   return paintingIds;
 }
 
-// Pick random paintings until one has a small photo. Only the photo link is kept.
-async function findImageUrl() {
+// Pick random paintings until one has a small photo, and return the museum's record for it.
+async function findPainting() {
   const ids = await getPaintingIds();
   for (let attempt = 0; attempt < 5; attempt++) {
     const id = ids[Math.floor(Math.random() * ids.length)];
@@ -51,7 +52,7 @@ async function findImageUrl() {
     const painting = await response.json();
     if (painting.primaryImageSmall) {
       lastPaintingId = id;
-      return painting.primaryImageSmall;
+      return painting;
     }
   }
   return null;
@@ -69,13 +70,21 @@ function preload(url) {
 // If anything goes wrong, the placeholder simply stays on screen.
 async function loadPainting() {
   photoEl.classList.remove("loaded");
+  currentDetails = null;
   loadingEl.hidden = false;
   try {
-    const url = await findImageUrl();
-    if (url) {
-      await preload(url);
-      photoEl.src = url;
+    const painting = await findPainting();
+    if (painting) {
+      await preload(painting.primaryImageSmall);
+      photoEl.src = painting.primaryImageSmall;
       photoEl.classList.add("loaded");
+      // Saved only now, so the details always belong to the image on screen.
+      currentDetails = {
+        title: painting.title,
+        artist: painting.artistDisplayName,
+        year: painting.objectDate,
+        link: painting.objectURL,
+      };
     }
   } catch (error) {
     // keep the placeholder
@@ -85,18 +94,32 @@ async function loadPainting() {
 }
 
 function showDetails() {
+  if (!currentDetails) return;
+
   detailsEl = document.createElement("div");
   detailsEl.className = "glass details";
 
   const name = document.createElement("p");
   name.className = "name";
-  name.textContent = PAINTING.title;
+  name.textContent = currentDetails.title || "Untitled";
 
   const meta = document.createElement("p");
   meta.className = "meta";
-  meta.textContent = PAINTING.artist + ", " + PAINTING.year;
+  const artist = currentDetails.artist || "Unknown artist";
+  meta.textContent = currentDetails.year ? artist + ", " + currentDetails.year : artist;
 
   detailsEl.append(name, meta);
+
+  if (currentDetails.link && currentDetails.link.startsWith(MET_LINK_START)) {
+    const link = document.createElement("a");
+    link.className = "link";
+    link.href = currentDetails.link;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = "View on the Met website";
+    detailsEl.append(link);
+  }
+
   dockEl.insertBefore(detailsEl, timerBoxEl);
 }
 

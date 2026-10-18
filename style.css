@@ -165,6 +165,14 @@ button.quiet {
   opacity: 0.8;
 }
 
+.details .link {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--accent);
+  text-decoration: underline;
+}
+
 /* laptop: the timer sits in the lower-left corner; when finished, the details take
    the left and the timer moves to the right */
 @media (min-width: 900px) {
