@@ -1,4 +1,4 @@
-const TOTAL_MS = 30 * 1000;
+const TOTAL_MS = 25 * 60 * 1000;
 
 const MET_SEARCH_URL =
   "https://collectionapi.metmuseum.org/public/collection/v1.1/search" +
