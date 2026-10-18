@@ -1,17 +1,26 @@
 const TOTAL_MS = 30 * 1000;
 
+const MET_SEARCH_URL =
+  "https://collectionapi.metmuseum.org/public/collection/v1.1/search" +
+  "?hasImages=true&medium=Paintings&departmentId=11&isHighlight=true&limit=500&q=*";
+const MET_OBJECT_URL = "https://collectionapi.metmuseum.org/public/collection/v1/objects/";
+
 const timeEl = document.getElementById("time");
 const primaryBtn = document.getElementById("primary");
 const resetBtn = document.getElementById("reset");
 const artEl = document.getElementById("art");
 const dockEl = document.querySelector(".dock");
 const timerBoxEl = document.querySelector(".timer");
+const photoEl = document.getElementById("photo");
+const loadingEl = document.getElementById("loading");
 
 // Made-up painting details for now. They only exist on the page once the timer finishes.
 const PAINTING = { title: "Harbour at Dawn", artist: "Marguerite Lenoir", year: "1887" };
 
 let state = "ready"; // ready, running, paused, finished
 let detailsEl = null;
+let paintingIds = null;
+let lastPaintingId = null;
 let remainingMs = TOTAL_MS;
 let endTime = 0;
 let intervalId = null;
@@ -21,6 +30,58 @@ function show(ms) {
   const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
   const seconds = String(totalSeconds % 60).padStart(2, "0");
   timeEl.textContent = minutes + ":" + seconds;
+}
+
+// Ask the museum once for a list of paintings that have photos, and keep the list.
+async function getPaintingIds() {
+  if (!paintingIds) {
+    const response = await fetch(MET_SEARCH_URL);
+    paintingIds = (await response.json()).objectIDs;
+  }
+  return paintingIds;
+}
+
+// Pick random paintings until one has a small photo. Only the photo link is kept.
+async function findImageUrl() {
+  const ids = await getPaintingIds();
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const id = ids[Math.floor(Math.random() * ids.length)];
+    if (id === lastPaintingId) continue;
+    const response = await fetch(MET_OBJECT_URL + id);
+    const painting = await response.json();
+    if (painting.primaryImageSmall) {
+      lastPaintingId = id;
+      return painting.primaryImageSmall;
+    }
+  }
+  return null;
+}
+
+function preload(url) {
+  return new Promise(function (resolve, reject) {
+    const image = new Image();
+    image.onload = resolve;
+    image.onerror = reject;
+    image.src = url;
+  });
+}
+
+// If anything goes wrong, the placeholder simply stays on screen.
+async function loadPainting() {
+  photoEl.classList.remove("loaded");
+  loadingEl.hidden = false;
+  try {
+    const url = await findImageUrl();
+    if (url) {
+      await preload(url);
+      photoEl.src = url;
+      photoEl.classList.add("loaded");
+    }
+  } catch (error) {
+    // keep the placeholder
+  } finally {
+    loadingEl.hidden = true;
+  }
 }
 
 function showDetails() {
@@ -94,7 +155,10 @@ function reset() {
 primaryBtn.addEventListener("click", function () {
   if (state === "ready" || state === "paused") start();
   else if (state === "running") pause();
-  else if (state === "finished") reset();
+  else if (state === "finished") {
+    reset();
+    loadPainting();
+  }
 });
 
 resetBtn.addEventListener("click", reset);
@@ -103,3 +167,5 @@ resetBtn.addEventListener("click", reset);
 document.addEventListener("visibilitychange", function () {
   if (state === "running") tick();
 });
+
+loadPainting();
