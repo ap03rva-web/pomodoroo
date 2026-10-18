@@ -56,6 +56,12 @@ body {
   transform: scale(1.1);
 }
 
+/* when the timer is finished, the painting is fully sharp */
+.art.finished {
+  filter: none;
+  transform: none;
+}
+
 /* everything that sits on top of the painting */
 .dock {
   position: relative;
@@ -111,13 +117,30 @@ button.quiet {
   color: var(--accent);
 }
 
-/* laptop: the timer sits in the lower-left corner */
+/* the painting details, added by the script when the timer finishes */
+.details { text-align: center; }
+
+.details .name {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.details .meta {
+  margin: 4px 0 0;
+  font-size: 15px;
+  opacity: 0.8;
+}
+
+/* laptop: the timer sits in the lower-left corner; when finished, the details take
+   the left and the timer moves to the right */
 @media (min-width: 900px) {
   .dock {
     flex-direction: row;
-    justify-content: flex-start;
+    justify-content: space-between;
     align-items: flex-end;
     padding: 32px 40px;
   }
   .glass.timer { width: 340px; }
+  .glass.details { width: 340px; text-align: left; }
 }
