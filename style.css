@@ -62,13 +62,14 @@ body {
   transform: none;
 }
 
-/* the real painting, in the same full-screen space as the placeholder */
+/* the real painting, shown whole in its own shape, with black around it */
 .photo {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  background: #000;
   opacity: 0;
   transition: opacity 0.6s;
 }
