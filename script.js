@@ -8,9 +8,11 @@ const MET_OBJECT_URL = "https://collectionapi.metmuseum.org/public/collection/v1
 const timeEl = document.getElementById("time");
 const primaryBtn = document.getElementById("primary");
 const resetBtn = document.getElementById("reset");
-const artEl = document.getElementById("art");
+const viewEl = document.querySelector(".view");
 const dockEl = document.querySelector(".dock");
 const timerBoxEl = document.querySelector(".timer");
+const stageEl = document.getElementById("stage");
+const frameEl = document.getElementById("frame");
 const photoEl = document.getElementById("photo");
 const loadingEl = document.getElementById("loading");
 
@@ -31,6 +33,16 @@ function show(ms) {
   const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
   const seconds = String(totalSeconds % 60).padStart(2, "0");
   timeEl.textContent = minutes + ":" + seconds;
+}
+
+// 1 = strongly blurred, 0 = fully sharp. "instant" skips the easing, so it can never flash sharp.
+function setBlur(amount, instant) {
+  if (instant) viewEl.classList.add("instant");
+  viewEl.style.setProperty("--blur", amount);
+  if (instant) {
+    void viewEl.offsetWidth;
+    viewEl.classList.remove("instant");
+  }
 }
 
 // Ask the museum once for a list of paintings that have photos, and keep the list.
@@ -61,7 +73,9 @@ async function findPainting() {
 function preload(url) {
   return new Promise(function (resolve, reject) {
     const image = new Image();
-    image.onload = resolve;
+    image.onload = function () {
+      resolve(image);
+    };
     image.onerror = reject;
     image.src = url;
   });
@@ -69,15 +83,16 @@ function preload(url) {
 
 // If anything goes wrong, the placeholder simply stays on screen.
 async function loadPainting() {
-  photoEl.classList.remove("loaded");
+  stageEl.classList.remove("loaded");
   currentDetails = null;
   loadingEl.hidden = false;
   try {
     const painting = await findPainting();
     if (painting) {
-      await preload(painting.primaryImageSmall);
+      const image = await preload(painting.primaryImageSmall);
+      frameEl.style.setProperty("--ratio", image.naturalWidth / image.naturalHeight);
       photoEl.src = painting.primaryImageSmall;
-      photoEl.classList.add("loaded");
+      stageEl.classList.add("loaded");
       // Saved only now, so the details always belong to the image on screen.
       currentDetails = {
         title: painting.title,
@@ -135,8 +150,6 @@ function finish() {
   state = "finished";
   primaryBtn.textContent = "Restart session";
   resetBtn.hidden = true;
-  artEl.classList.remove("started");
-  artEl.classList.add("finished");
   showDetails();
 }
 
@@ -144,6 +157,7 @@ function finish() {
 function tick() {
   remainingMs = Math.max(0, endTime - Date.now());
   show(remainingMs);
+  setBlur(remainingMs / TOTAL_MS);
   if (remainingMs === 0) finish();
 }
 
@@ -152,7 +166,6 @@ function start() {
   intervalId = setInterval(tick, 250);
   state = "running";
   primaryBtn.textContent = "Pause";
-  artEl.classList.add("started");
 }
 
 function pause() {
@@ -171,7 +184,7 @@ function reset() {
   show(remainingMs);
   primaryBtn.textContent = "Start";
   resetBtn.hidden = false;
-  artEl.classList.remove("started", "finished");
+  setBlur(1, true);
   hideDetails();
 }
 
