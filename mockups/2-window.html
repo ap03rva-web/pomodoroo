@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup 2 - Window</title>
+<style>
+  :root {
+    --sky: #9fb4c7;
+    --ink: #1f2d3a;
+    --glass: rgba(240, 246, 250, 0.8);
+    --accent: #3f5f7d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--sky);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  .tag {
+    margin: 0;
+    padding: 10px 20px;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: #8aa1b6;
+  }
+
+  /* each view is a full-screen "window" */
+  .view {
+    position: relative;
+    min-height: 100svh;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+  }
+  .art {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 72% 24%, #f6dca8 0 11%, transparent 12%),
+      radial-gradient(ellipse at 25% 90%, #5f8573 0 42%, transparent 43%),
+      radial-gradient(ellipse at 80% 100%, #7d6a8f 0 30%, transparent 31%),
+      linear-gradient(165deg, #8fb0c8 0%, #d8c4b2 55%, #b07f78 100%);
+  }
+  .blur-heavy { filter: blur(26px); transform: scale(1.2); }
+  .blur-mid   { filter: blur(10px); transform: scale(1.1); }
+
+  /* everything that sits on top of the painting lives in the dock */
+  .dock {
+    position: relative;
+    width: 100%;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  .glass {
+    background: var(--glass);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 22px;
+    padding: 18px 20px;
+    box-shadow: 0 8px 24px rgba(31, 45, 58, 0.18);
+  }
+  .timer { text-align: center; }
+  .time {
+    margin: 0;
+    font-size: clamp(52px, 13vw, 76px);
+    font-weight: 300;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .buttons { display: flex; gap: 12px; justify-content: center; margin-top: 12px; }
+  button {
+    font: inherit;
+    font-size: 15px;
+    min-width: 96px;
+    height: 48px;
+    padding: 0 22px;
+    border-radius: 999px;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+  }
+  button.quiet { background: rgba(255, 255, 255, 0.6); color: var(--accent); }
+
+  .details { text-align: center; }
+  .details .name { margin: 0; font-size: 20px; font-weight: 600; }
+  .details .meta { margin: 4px 0 0; font-size: 15px; opacity: 0.8; }
+
+  /* loading look */
+  .loading::after {
+    content: "Loading artwork...";
+    position: absolute; inset: 0;
+    display: grid; place-items: center;
+    font-size: 16px;
+    color: var(--ink);
+    background: linear-gradient(100deg, #c9d6e1 30%, #e3ebf2 50%, #c9d6e1 70%);
+    background-size: 200% 100%;
+    animation: shimmer 1.8s linear infinite;
+  }
+  @keyframes shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+
+  /* laptop layout: timer lower-left, details lower-right */
+  @media (min-width: 900px) {
+    .view { min-height: 100svh; }
+    .dock {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 32px 40px;
+    }
+    .glass.timer { width: 340px; }
+    .glass.details { width: 340px; text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<!-- VIEW 1: Before starting -->
+<p class="tag">Mockup 2 - Window - Before starting</p>
+<main class="view">
+  <div class="art blur-heavy"></div>
+  <div class="dock">
+    <div class="glass timer">
+      <p class="time">25:00</p>
+      <div class="buttons"><button type="button">Start</button><button type="button" class="quiet">Reset</button></div>
+    </div>
+  </div>
+</main>
+
+<!-- VIEW 2: Timer running -->
+<p class="tag">Mockup 2 - Window - Timer running</p>
+<main class="view">
+  <div class="art blur-mid"></div>
+  <div class="dock">
+    <div class="glass timer">
+      <p class="time">14:32</p>
+      <div class="buttons"><button type="button">Pause</button><button type="button" class="quiet">Reset</button></div>
+    </div>
+  </div>
+</main>
+
+<!-- VIEW 3: Timer finished -->
+<p class="tag">Mockup 2 - Window - Timer finished</p>
+<main class="view">
+  <div class="art"></div>
+  <div class="dock">
+    <div class="glass details">
+      <p class="name">Harbour at Dawn</p>
+      <p class="meta">Marguerite Lenoir, 1887</p>
+    </div>
+    <div class="glass timer">
+      <p class="time">00:00</p>
+      <div class="buttons"><button type="button">Restart session</button></div>
+    </div>
+  </div>
+</main>
+
+<!-- EXTRA: Loading artwork -->
+<p class="tag">Mockup 2 - Window - Loading artwork</p>
+<main class="view">
+  <div class="art loading"></div>
+  <div class="dock">
+    <div class="glass timer">
+      <p class="time">25:00</p>
+      <div class="buttons"><button type="button">Start</button><button type="button" class="quiet">Reset</button></div>
+    </div>
+  </div>
+</main>
+
+</body>
+</html>

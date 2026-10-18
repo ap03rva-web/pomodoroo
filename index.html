@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pomodoro Art</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1 class="visually-hidden">Pomodoro Art</h1>
+  <main class="view">
+    <div class="art"></div>
+    <div class="photo-stage" id="stage">
+      <div class="frame" id="frame">
+        <img class="photo" id="photo" alt="">
+      </div>
+    </div>
+    <div class="loading" id="loading">Loading artwork...</div>
+    <div class="glass notice" id="notice" role="status" hidden>
+      <p>We couldn't load a painting this time.</p>
+      <button type="button" id="retry">Try again</button>
+    </div>
+    <div class="dock">
+      <div class="glass timer">
+        <p class="time" id="time">25:00</p>
+        <div class="buttons">
+          <button type="button" id="primary">Start</button>
+          <button type="button" id="reset" class="quiet">Reset</button>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>
