@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup 1 - Gallery Wall</title>
+<style>
+  :root {
+    --wall: #cfdac9;
+    --ink: #2f3f35;
+    --mat: #fbfaf5;
+    --pill: #56734f;
+    --pill-text: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--wall);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  /* label above each view, so you know which screen you are looking at */
+  .tag {
+    margin: 0;
+    padding: 10px 20px;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: #b9c9b3;
+  }
+
+  .stage {
+    min-height: 100svh;
+    padding: 24px 20px 40px;
+    display: grid;
+    gap: 20px;
+    justify-items: center;
+    align-content: start;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "art" "timer" "plaque";
+  }
+  .art-wrap { grid-area: art; width: min(100%, 420px); }
+  .timer-pane { grid-area: timer; text-align: center; width: min(100%, 420px); }
+  .plaque { grid-area: plaque; width: min(100%, 420px); }
+
+  /* the frame: white mat around the painting */
+  .frame {
+    background: var(--mat);
+    padding: 14px;
+    border-radius: 2px;
+    box-shadow: 0 14px 30px rgba(47, 63, 53, 0.22), 0 2px 4px rgba(47, 63, 53, 0.18);
+  }
+  .art {
+    aspect-ratio: 4 / 5;
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+    background:
+      radial-gradient(circle at 70% 28%, #f3d9a4 0 14%, transparent 15%),
+      radial-gradient(ellipse at 30% 85%, #6f8f7a 0 38%, transparent 39%),
+      linear-gradient(170deg, #9bb7c9 0%, #d9c3b0 55%, #b98a77 100%);
+  }
+  .blur-heavy { filter: blur(22px); transform: scale(1.15); }
+  .blur-mid   { filter: blur(9px);  transform: scale(1.08); }
+  .art-clip { overflow: hidden; }
+
+  .time {
+    font-size: clamp(56px, 14vw, 88px);
+    font-weight: 300;
+    letter-spacing: 0.02em;
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .hint { margin: 0 0 18px; font-size: 14px; opacity: 0.75; }
+  .buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  button {
+    font: inherit;
+    font-size: 16px;
+    padding: 13px 30px;
+    border-radius: 999px;
+    border: 2px solid var(--pill);
+    background: var(--pill);
+    color: var(--pill-text);
+    min-width: 128px;
+  }
+  button.quiet { background: transparent; color: var(--pill); }
+
+  /* the museum wall plaque, shown only when the timer is finished */
+  .plaque {
+    background: var(--mat);
+    padding: 16px 20px;
+    border-left: 4px solid var(--pill);
+    box-shadow: 0 4px 10px rgba(47, 63, 53, 0.15);
+  }
+  .plaque .name { margin: 0; font-size: 18px; font-weight: 600; }
+  .plaque .meta { margin: 4px 0 0; font-size: 14px; opacity: 0.8; }
+
+  /* loading look */
+  .loading::after {
+    content: "Loading artwork...";
+    position: absolute; inset: 0;
+    display: grid; place-items: center;
+    font-size: 15px;
+    color: var(--ink);
+    background: linear-gradient(100deg, #e4ebe0 30%, #f3f6f0 50%, #e4ebe0 70%);
+    background-size: 200% 100%;
+    animation: shimmer 1.8s linear infinite;
+  }
+  @keyframes shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+
+  /* laptop layout */
+  @media (min-width: 900px) {
+    .stage {
+      grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr);
+      grid-template-areas: "art timer" "plaque timer";
+      grid-template-rows: auto auto;
+      column-gap: 56px;
+      align-content: center;
+      justify-items: stretch;
+      padding: 32px 6vw;
+    }
+    .art-wrap { justify-self: end; align-self: end; width: auto; height: min(70svh, 700px); aspect-ratio: 4 / 5; }
+    .art-wrap .frame { height: 100%; }
+    .art-wrap .art-clip { height: 100%; }
+    .art-wrap .art { height: 100%; aspect-ratio: auto; }
+    .plaque { justify-self: end; align-self: start; width: min(100%, 560px); max-width: calc(min(70svh, 700px) * 0.8); }
+    .timer-pane { grid-row: 1 / span 2; align-self: center; justify-self: start; text-align: left; }
+    .buttons { justify-content: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<!-- VIEW 1: Before starting -->
+<p class="tag">Mockup 1 - Gallery Wall - Before starting</p>
+<main class="stage">
+  <div class="art-wrap"><div class="frame"><div class="art-clip"><div class="art blur-heavy"></div></div></div></div>
+  <div class="timer-pane">
+    <p class="time">25:00</p>
+    <p class="hint">Ready when you are.</p>
+    <div class="buttons"><button type="button">Start</button><button type="button" class="quiet">Reset</button></div>
+  </div>
+</main>
+
+<!-- VIEW 2: Timer running -->
+<p class="tag">Mockup 1 - Gallery Wall - Timer running</p>
+<main class="stage">
+  <div class="art-wrap"><div class="frame"><div class="art-clip"><div class="art blur-mid"></div></div></div></div>
+  <div class="timer-pane">
+    <p class="time">14:32</p>
+    <p class="hint">The painting is coming into focus.</p>
+    <div class="buttons"><button type="button">Pause</button><button type="button" class="quiet">Reset</button></div>
+  </div>
+</main>
+
+<!-- VIEW 3: Timer finished -->
+<p class="tag">Mockup 1 - Gallery Wall - Timer finished</p>
+<main class="stage">
+  <div class="art-wrap"><div class="frame"><div class="art-clip"><div class="art"></div></div></div></div>
+  <div class="plaque">
+    <p class="name">Harbour at Dawn</p>
+    <p class="meta">Marguerite Lenoir, 1887</p>
+  </div>
+  <div class="timer-pane">
+    <p class="time">00:00</p>
+    <p class="hint">Well done. Take a proper look.</p>
+    <div class="buttons"><button type="button">Restart session</button></div>
+  </div>
+</main>
+
+<!-- EXTRA: Loading artwork -->
+<p class="tag">Mockup 1 - Gallery Wall - Loading artwork</p>
+<main class="stage">
+  <div class="art-wrap"><div class="frame"><div class="art-clip"><div class="art loading"></div></div></div></div>
+  <div class="timer-pane">
+    <p class="time">25:00</p>
+    <p class="hint">Hanging a painting...</p>
+    <div class="buttons"><button type="button">Start</button><button type="button" class="quiet">Reset</button></div>
+  </div>
+</main>
+
+</body>
+</html>

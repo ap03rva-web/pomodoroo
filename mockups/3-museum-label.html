@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup 3 - Museum Label</title>
+<style>
+  :root {
+    --paper: #f3ead9;
+    --card: #fffaf0;
+    --line: #d9ccb2;
+    --ink: #4a3b34;
+    --accent: #a8605a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  .tag {
+    margin: 0;
+    padding: 10px 20px;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: #e7dbc3;
+  }
+
+  .stage {
+    min-height: 100svh;
+    padding: 20px;
+    display: grid;
+    gap: 20px;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+  }
+  .art-clip { overflow: hidden; border-radius: 6px; box-shadow: 0 10px 24px rgba(74, 59, 52, 0.2); }
+  .art {
+    aspect-ratio: 4 / 5;
+    width: 100%;
+    position: relative;
+    background:
+      radial-gradient(circle at 68% 26%, #f7dfae 0 13%, transparent 14%),
+      radial-gradient(ellipse at 28% 88%, #86a08a 0 40%, transparent 41%),
+      linear-gradient(168deg, #c9a9b0 0%, #e6cfae 55%, #b98770 100%);
+  }
+  .blur-heavy { filter: blur(24px); transform: scale(1.18); }
+  .blur-mid   { filter: blur(10px); transform: scale(1.1); }
+
+  /* the museum label card */
+  .label {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px 24px;
+    text-align: center;
+  }
+  .time {
+    margin: 0 0 20px;
+    font-size: clamp(54px, 14vw, 80px);
+    font-weight: 300;
+    font-variant-numeric: tabular-nums;
+  }
+  .buttons { display: grid; gap: 12px; }
+  button {
+    font: inherit;
+    font-size: 16px;
+    width: 100%;
+    padding: 15px 20px;
+    border-radius: 4px;
+    border: 1.5px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+  }
+  button.quiet { background: transparent; color: var(--accent); }
+
+  .details { border-top: 1px solid var(--line); margin-top: 24px; padding-top: 20px; }
+  .details .name { margin: 0; font-size: 20px; font-weight: 600; }
+  .details .meta { margin: 6px 0 20px; font-size: 15px; opacity: 0.8; }
+  .details + .buttons { margin-top: 0; }
+
+  /* loading look */
+  .loading::after {
+    content: "Loading artwork...";
+    position: absolute; inset: 0;
+    display: grid; place-items: center;
+    font-size: 15px;
+    color: var(--ink);
+    background: linear-gradient(100deg, #eadfca 30%, #f7f0e1 50%, #eadfca 70%);
+    background-size: 200% 100%;
+    animation: shimmer 1.8s linear infinite;
+  }
+  @keyframes shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+
+  /* laptop layout: big painting left, label card right */
+  @media (min-width: 900px) {
+    .stage {
+      grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+      align-items: center;
+      padding: 32px 5vw;
+      gap: 40px;
+    }
+    .art { aspect-ratio: auto; height: min(78svh, 760px); }
+  }
+</style>
+</head>
+<body>
+
+<!-- VIEW 1: Before starting -->
+<p class="tag">Mockup 3 - Museum Label - Before starting</p>
+<main class="stage">
+  <div class="art-clip"><div class="art blur-heavy"></div></div>
+  <div class="label">
+    <p class="time">25:00</p>
+    <div class="buttons"><button type="button">Start</button><button type="button" class="quiet">Reset</button></div>
+  </div>
+</main>
+
+<!-- VIEW 2: Timer running -->
+<p class="tag">Mockup 3 - Museum Label - Timer running</p>
+<main class="stage">
+  <div class="art-clip"><div class="art blur-mid"></div></div>
+  <div class="label">
+    <p class="time">14:32</p>
+    <div class="buttons"><button type="button">Pause</button><button type="button" class="quiet">Reset</button></div>
+  </div>
+</main>
+
+<!-- VIEW 3: Timer finished -->
+<p class="tag">Mockup 3 - Museum Label - Timer finished</p>
+<main class="stage">
+  <div class="art-clip"><div class="art"></div></div>
+  <div class="label">
+    <p class="time">00:00</p>
+    <div class="details">
+      <p class="name">Harbour at Dawn</p>
+      <p class="meta">Marguerite Lenoir, 1887</p>
+    </div>
+    <div class="buttons"><button type="button">Restart session</button></div>
+  </div>
+</main>
+
+<!-- EXTRA: Loading artwork -->
+<p class="tag">Mockup 3 - Museum Label - Loading artwork</p>
+<main class="stage">
+  <div class="art-clip"><div class="art loading"></div></div>
+  <div class="label">
+    <p class="time">25:00</p>
+    <div class="buttons"><button type="button">Start</button><button type="button" class="quiet">Reset</button></div>
+  </div>
+</main>
+
+</body>
+</html>
