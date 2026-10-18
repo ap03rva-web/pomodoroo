@@ -47,6 +47,13 @@ body {
     linear-gradient(165deg, #8fb0c8 0%, #d8c4b2 55%, #b07f78 100%);
   filter: blur(26px);
   transform: scale(1.2);
+  transition: filter 0.6s, transform 0.6s;
+}
+
+/* once the timer has started, the painting is a little clearer */
+.art.started {
+  filter: blur(10px);
+  transform: scale(1.1);
 }
 
 /* everything that sits on top of the painting */
